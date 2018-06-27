@@ -1,14 +1,14 @@
-setwd("~/bigdata/ML/experiments/learning_curve")
+library(here)
 
-source(file="learning_curve.R")
-source(file="../multiplot.R")
+source(file="experiments/learning_curve/learning_curve.R")
+source(file="experiments/multiplot.R")
 
 
 library(ggplot2)
 library(e1071)
 
-train.raw <- read.csv("../titanic_set/titanic_train.csv")
-test.raw <- read.csv("../titanic_set/titanic_test.csv")
+train.raw <- read.csv("datasets/titanic/titanic_train.csv")
+test.raw <- read.csv("datasets/titanic/titanic_test.csv")
 
 
 features <- c("Pclass", "Sex", "Age", "SibSp", "Parch")

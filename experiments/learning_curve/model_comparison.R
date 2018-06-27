@@ -1,14 +1,14 @@
-setwd("~/bigdata/ML/experiments/learning_curve")
+library(here)
 
-source(file="learning_curve.R")
-source(file="../multiplot.R")
+source(file="experiments/learning_curve/learning_curve.R")
+source(file="experiments/multiplot.R")
 
 
 library(ggplot2)
 
 
-train.raw <- read.csv("../titanic_set/titanic_train.csv")
-test.raw <- read.csv("../titanic_set/titanic_test.csv")
+train.raw <- read.csv("datasets/titanic/titanic_train.csv")
+test.raw <- read.csv("datasets/titanic/titanic_test.csv")
 
 
 features <- c("Pclass", "Sex", "Age", "SibSp", "Parch")
@@ -20,6 +20,8 @@ test.selected <- test.raw[, c(features, "Survived")]
 train.selected$SurvivedF <- as.factor(train.selected$Survived)
 test.selected$SurvivedF <- as.factor(test.selected$Survived)
 
+
+plot.steps  <- 50
 
 families <- c( binomial(link = "logit"),
               gaussian(link = "identity"),
@@ -49,7 +51,7 @@ logreg.predict_fun <- function(model, data) {
 logreg.plot <- learning_curve.plot(train.selected, test.selected, 
                                    target = "Survived", features = features,
                     logreg.model_fun, logreg.predict_fun,
-                    title = "logistic regression", step = 20)
+                    title = "logistic regression", step = plot.steps)
 
 #######
 ### svm linear
@@ -66,7 +68,7 @@ svm.linear.model_fun  <- function(formula, train) {
 
 svm.linear.plot <- learning_curve.plot(train.selected, test.selected, 
                                        target = "SurvivedF", features = features, 
-                                       svm.linear.model_fun, step=20,
+                                       svm.linear.model_fun, step=plot.steps,
                                         title = "svm linear")
 
 #######
@@ -85,7 +87,7 @@ svm.logi.predict_fun <- function(model, data) {
 }
 svm.logi.plot <- learning_curve.plot(train.selected, test.selected, 
                                      target = "SurvivedF", features = features, 
-                    svm.logi.model_fun,  step=20,
+                    svm.logi.model_fun,  step=plot.steps,
                     title = "svm sigmoid")
 
 #######
@@ -101,7 +103,7 @@ svm.poly.model_fun  <- function(formula, train) {
 
 svm.poly.plot <- learning_curve.plot(train.selected, test.selected, 
                                      target = "SurvivedF", features = features,  
-                                     svm.poly.model_fun, step=20,
+                                     svm.poly.model_fun, step=plot.steps,
                     title = "svm polynomial")
 
 
@@ -118,7 +120,7 @@ rf.model_fun <- function(formula, train) {
 
 rf.plot <- learning_curve.plot(train.selected, test.selected, 
                                target = "SurvivedF", features = features,  
-                               rf.model_fun, step=20,
+                               rf.model_fun, step=plot.steps,
                                title = "random forest")
 
 
@@ -129,3 +131,4 @@ multiplot(logreg.plot, svm.linear.plot, svm.logi.plot, svm.poly.plot, rf.plot, c
 ggsave("model comparison", plot = last_plot(), device = "png",
        scale = 1, width = 30, height = 20, units =  "cm",
        dpi = 300)
+
