@@ -14,10 +14,10 @@ train.ff <- data.frame(matrix(NA, nrow=nrow(train.raw), ncol=0))
 
 ## title
 
-train.ff$Title.raw <- sub(".*?, (\\w*).*", "\\1", train.raw$Name)
-table(train.ff$Title.raw)
-boxplot(train.raw$Survived ~ train.ff$Title.raw)
-t <- table(train.raw$Survived, train.ff$Title.raw)
+Title.temp <- sub(".*?, (\\w*).*", "\\1", train.raw$Name)
+table(Title.temp)
+boxplot(train.raw$Survived ~ Title.temp)
+t <- table(train.raw$Survived, Title.temp)
 prop.table(t, 2)
 
 simp_title <- function(title) {
@@ -29,23 +29,23 @@ simp_title <- function(title) {
   if (title %in% c("Master", "Miss", "Mrs", "Mr")) {return(title);}
   return("Special")
 }
-train.ff$Title <- sapply(train.ff$Title.raw, simp_title)
+train.ff$Title <- sapply(Title.temp, simp_title)
 table(train.ff$Title)
 
 
 ## simple fare
 plot(density(train.raw$Fare))
 simp_fare <- function(x) {if (x < 20) {return(0)}; if (x<40) {return(1)}; if (x<100) {return(2)}; return(3)}
-train.ff$Fare.factor <- sapply(train.raw$Fare, simp_fare)
-table(train.ff$Fare.factor, train.raw$Survived)
-table(train.ff$Fare.factor, train.raw$Pclass)
+train.ff$Fare.discrete <- sapply(train.raw$Fare, simp_fare)
+table(train.ff$Fare.discrete, train.raw$Survived)
+table(train.ff$Fare.discrete, train.raw$Pclass)
 
 
 ##  simple age
 plot(density(train.raw$Age[!is.na(train.raw$Age)]))
 simp_age <- function(x) {if (is.na(x)) return(NA); if (x<=5) return(0); if (x <= 16) return(1); 
                          if (x<= 50) return(2); return(3) }
-train.ff$Age.factor <- sapply(train.raw$Age, simp_age)
+train.ff$Age.discrete <- sapply(train.raw$Age, simp_age)
 
 ## cabines 
 # données incomplètes, on peut oublier

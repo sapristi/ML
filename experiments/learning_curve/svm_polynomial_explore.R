@@ -7,8 +7,8 @@ source(file="experiments/multiplot.R")
 library(ggplot2)
 library(e1071)
 
-train.raw <- read.csv("datasets/titanic/titanic_train.csv")
-test.raw <- read.csv("datasets/titanic/titanic_test.csv")
+train.raw <- read.csv("datasets/titanic/train.csv")
+test.raw <- read.csv("datasets/titanic/test.csv")
 
 
 features <- c("Pclass", "Sex", "Age", "SibSp", "Parch")
