@@ -7,7 +7,7 @@ default_predict_fun = function(model, data) {predict(model, data)}
 learning_curve.plot <- function(train, test, target, 
                                 features, model_fun, 
                                 predict_fun = default_predict_fun, 
-                                step = 5, limit=500, title="") 
+                                step = 5, limit=500, title="", previous_plot=ggplot()) 
   {
   res <- data.frame()
   c <- 1
@@ -30,7 +30,8 @@ learning_curve.plot <- function(train, test, target,
     c <- c+1
   }
   print(summary(model))
-  g <- ggplot(data=res, aes(x=V1, y=V2, color="train"))
+  g <- previous_plot
+  g <- g + ggplot(data=res, aes(x=V1, y=V2, color="train"))
   g <- g + geom_line()
   g <- g + geom_line(aes(x=V1, y=V3, color = "test"))
   g <- g + labs(x = "training set size", y = "accuracy", colour="data set", title =title)

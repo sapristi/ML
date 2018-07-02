@@ -1,5 +1,5 @@
 library(here)
-
+source(file="misc_functions.R")
 train.raw <- read.csv("datasets/titanic_na/train.csv")
 test.raw <- read.csv("datasets/titanic_na/test.csv")
 
@@ -10,7 +10,7 @@ summary(train.raw)
 # feature creation
 
 ### dataframe to hold the forged features
-train.ff <- data.frame(matrix(NA, nrow=nrow(train.raw), ncol=0))
+train.ff <- df.make.empty(nrow=nrow(train.raw))
 
 ## title
 
@@ -32,6 +32,11 @@ simp_title <- function(title) {
 train.ff$Title <- sapply(Title.temp, simp_title)
 table(train.ff$Title)
 
+make_title <- function(name) {
+  title_partial <- sub(".*?, (\\w*).*", "\\1", name)
+  title <- simp_title(title_partial)
+  return(title)
+}
 
 ## simple fare
 plot(density(train.raw$Fare))
@@ -61,5 +66,20 @@ simp_cabin_deck <- function(cabin_str, pclass) {
 train.ff$Cabin.simp <- mapply(simp_cabin_deck, train.raw$Cabin, train.raw$Pclass)
 
 
+# function to apply to any dataframe
+
+forge_features <- function(df) {
+  res <- df.make.empty(nrow(df))
+  res$Title <- sapply(df$Name, make_title)
+  res$Fare <- sapply(df$Fare, simp_fare)
+  res$Age <- sapply(df$Age, simp_age)
+  
+}
+
+
+
 # save the forged features
 write.csv(train.ff, file="datasets/titanic_na/train.ff.csv", row.names = FALSE)
+
+
+

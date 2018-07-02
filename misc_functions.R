@@ -1,6 +1,6 @@
 
 
-df.make.empty <- function(nrow, colnames, stringsAsFactors=TRUE) {
+df.make.empty <- function(nrow, colnames=c(), stringsAsFactors=TRUE) {
   ncol <- length(colnames)
   df <- data.frame(matrix(vector(), nrow, ncol,
                         dimnames=list(c(), colnames)),
