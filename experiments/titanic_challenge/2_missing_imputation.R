@@ -15,8 +15,13 @@ md.pattern(train.raw)
 
 train.mi1.input <- data.frame(matrix(NA, nrow = nrow(train.raw), ncol = 0))
 
-to_copy.raw <- c("Age", "Sibsp", "Parch", "Sex")
-for (colname in to_copy.raw) {train.mi1.input[[colname]] <- train.raw[,colname]}
+to_copy.raw <- c("Age", "SibSp", "Parch", "Sex")
+test.df = data.frame(matrix(vector(), nrow(train.raw), 4,
+                        dimnames=list(c(), to_copy.raw)),
+                        stringsAsFactors=TRUE)
+
+
+for (colname in to_copy.raw) {test.df[,colname] <- train.raw[,colname]}
 
 
 train.mi2.input$Sib
