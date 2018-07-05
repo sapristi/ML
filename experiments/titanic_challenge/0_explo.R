@@ -1,5 +1,7 @@
 library(here)
 source(file="misc_functions.R")
+
+
 train.raw <- read.csv("datasets/titanic_na/train.csv")
 test.raw <- read.csv("datasets/titanic_na/test.csv")
 
@@ -73,7 +75,8 @@ forge_features <- function(df) {
   res$Title <- sapply(df$Name, make_title)
   res$Fare <- sapply(df$Fare, simp_fare)
   res$Age <- sapply(df$Age, simp_age)
-  
+  res$Cabin <- sapply(df$Cabin, simp_cabin_deck)
+  return(res)
 }
 
 
