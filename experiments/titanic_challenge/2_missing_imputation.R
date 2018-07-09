@@ -1,11 +1,12 @@
 library(here)
 source(file="misc_functions.R")
 
-
 train.raw <- read.csv("datasets/titanic_na/train.csv")
 test.raw <- read.csv("datasets/titanic_na/test.csv")
-train.ff <- read.csv("datasets/titanic_na/train.ff.csv")
+# train.ff <- read.csv("datasets/titanic_na/train.ff.csv")
 
+source(file="experiments/titanic_challenge/1_feature_engineering.R")
+train.ff <- fe$forge_features(train.raw)
 
 
 cols.notna <- !is.na(train.raw$Age)
