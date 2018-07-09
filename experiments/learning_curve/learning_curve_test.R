@@ -33,7 +33,7 @@ g <- ggplot()
 #### aux functions
 library(purrr)
 discretize <- function(data, threshold=0.5) {
-  res <- map_dbl(data, function(e) {if (e < threshold) {return(0)} else {return(1)}});
+  res <- lapply(data, function(e) {if (e < threshold) {return(0)} else {return(1)}});
   return(res);
 }
 
@@ -47,10 +47,10 @@ logreg.predict_fun <- function(model, data) {
   discretize(plogis(predict(model, data)))
 }
 
-plot <- learning_curve.plot(train.selected, test.selected, 
+plot <- learning_curve$plot(train.selected, test.selected, 
                     target = "Survived", features = features,
                     logreg.model_fun, logreg.predict_fun,
-                    title = "logistic regression", step = 20, previous_plot = ggplot())
+                    title = "logistic regression", step = 20)
 
 #######
 ### svm linear
