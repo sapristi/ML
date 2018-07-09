@@ -1,14 +1,13 @@
-setwd("~/bigdata/ML/experiments/learning_curve")
-
-source(file="learning_curve.R")
-source(file="../multiplot.R")
+library(here)
+source(file="experiments/learning_curve/learning_curve.R")
+source(file="experiments/multiplot.R")
 
 
 library(ggplot2)
 
 
-train.raw <- read.csv("../titanic_set/titanic_train.csv")
-test.raw <- read.csv("../titanic_set/titanic_test.csv")
+train.raw <- read.csv("datasets/titanic/train.csv")
+test.raw <- read.csv("datasets/titanic/test.csv")
 
 
 features <- c("Pclass", "Sex", "Age", "SibSp", "Parch")
@@ -29,6 +28,8 @@ families <- c( binomial(link = "logit"),
 
 
 
+g <- ggplot()
+
 #### aux functions
 library(purrr)
 discretize <- function(data, threshold=0.5) {
@@ -46,10 +47,10 @@ logreg.predict_fun <- function(model, data) {
   discretize(plogis(predict(model, data)))
 }
 
-logreg.plot <- learning_curve.plot(train.selected, test.selected, 
-                                   target = "Survived", features = features,
+plot <- learning_curve.plot(train.selected, test.selected, 
+                    target = "Survived", features = features,
                     logreg.model_fun, logreg.predict_fun,
-                    title = "logistic regression", step = 20)
+                    title = "logistic regression", step = 20, previous_plot = ggplot())
 
 #######
 ### svm linear
@@ -86,7 +87,7 @@ svm.logi.predict_fun <- function(model, data) {
 svm.logi.plot <- learning_curve.plot(train.selected, test.selected, 
                                      target = "SurvivedF", features = features, 
                     svm.logi.model_fun,  step=20,
-                    title = "svm sigmoid")
+                    title = "svm sigmoid", previous_plot = svm.linear.plot)
 
 #######
 ### svm polynomial
