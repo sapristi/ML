@@ -1,44 +1,36 @@
 library(here)
 source(file="misc_functions.R")
 
-
 train.raw <- read.csv("datasets/titanic_na/train.csv")
-test.raw <- read.csv("datasets/titanic_na/test.csv")
-
+train.raw$Survived <- as.factor(train.raw$Survived)
 summary(train.raw)
 
 
 
 # feature creation
 
-### dataframe to hold the forged features
-train.ff <- df.make.empty(nrow=nrow(train.raw))
+cols.notna <- !is.na(train.raw$Age)
+train.notna <- train.raw[cols.notna,]
+library(lattice)
 
-## title
 
-Title.temp <- sub(".*?, (\\w*).*", "\\1", train.raw$Name)
-table(Title.temp)
-boxplot(train.raw$Survived ~ Title.temp)
-t <- table(train.raw$Survived, Title.temp)
-prop.table(t, 2)
+##  simple age
+plot(density(train.notna$Age))
+densityplot(~Age| Survived + Sex, data = train.notna)
+histogram(~Age| Survived + Sex, data = train.notna, type="count", nint=20)
+train.notna$Age.disc1 <- sapply(train.notna$Age, function(age){return(as.integer(age / 1))})
+train.notna$Age.disc2 <- sapply(train.notna$Age, function(age){return(as.integer(age / 2))})
+train.notna$Age.disc4 <- sapply(train.notna$Age, function(age){return(as.integer(age / 4))})
 
-simp_title <- function(title) {
-  if (title %in% c("Mlle", "Ms") ) {
-    return("Miss")
-  }
-  if (title == "Mme") {return("Mrs");}
-  
-  if (title %in% c("Master", "Miss", "Mrs", "Mr")) {return(title);}
-  return("Special")
-}
-train.ff$Title <- sapply(Title.temp, simp_title)
-table(train.ff$Title)
 
-make_title <- function(name) {
-  title_partial <- sub(".*?, (\\w*).*", "\\1", name)
-  title <- simp_title(title_partial)
-  return(title)
-}
+histogram(~Age.disc|Survived + Sex, data = train.notna, type="count")
+histogram(~Survived | Age.disc1 + Sex , data = train.notna)
+
+
+simp_age <- function(x) {if (is.na(x)) return(NA); if (x<=5) return(0); if (x <= 16) return(1); 
+  if (x<= 50) return(2); return(3) }
+train.notna$Age.discrete <- sapply(train.notna$Age, simp_age)
+
 
 ## simple fare
 plot(density(train.raw$Fare))
@@ -47,25 +39,6 @@ train.ff$Fare.discrete <- sapply(train.raw$Fare, simp_fare)
 table(train.ff$Fare.discrete, train.raw$Survived)
 table(train.ff$Fare.discrete, train.raw$Pclass)
 
-
-##  simple age
-plot(density(train.raw$Age[!is.na(train.raw$Age)]))
-simp_age <- function(x) {if (is.na(x)) return(NA); if (x<=5) return(0); if (x <= 16) return(1); 
-                         if (x<= 50) return(2); return(3) }
-train.ff$Age.discrete <- sapply(train.raw$Age, simp_age)
-
-## cabines 
-# données incomplètes, on peut oublier
-# sauf peut-être pour les 1ère classes
-simp_cabin_deck <- function(cabin_str, pclass) {
-  if (pclass == 1) {
-    if (cabin_str != "") {
-      return(substring(cabin_str,0,1))
-    } else  { return("NO") }
-  } else { return("NO") }
-}
-
-train.ff$Cabin.simp <- mapply(simp_cabin_deck, train.raw$Cabin, train.raw$Pclass)
 
 
 # function to apply to any dataframe

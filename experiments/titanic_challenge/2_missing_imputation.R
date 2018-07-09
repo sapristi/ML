@@ -1,18 +1,15 @@
 library(here)
 source(file="misc_functions.R")
+source(file="experiments/titanic_challenge/1_feature_engineering.R")
 
 train.raw <- read.csv("datasets/titanic_na/train.csv")
-test.raw <- read.csv("datasets/titanic_na/test.csv")
-# train.ff <- read.csv("datasets/titanic_na/train.ff.csv")
-
-source(file="experiments/titanic_challenge/1_feature_engineering.R")
 train.ff <- fe$forge_features(train.raw)
 
 
 cols.notna <- !is.na(train.raw$Age)
 train.notna <- train.raw[cols.notna,]
 train.notna$Title <- train.ff$Title[cols.notna]
-train.notna$Age.disc <- train.ff$Age.discrete[cols.notna]
+train.notna$Age.disc <- train.ff$Age[cols.notna]
 
 
 plot(x = train.notna$Title, y = train.notna$Age)
