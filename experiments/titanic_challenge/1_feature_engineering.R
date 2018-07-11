@@ -31,10 +31,10 @@ fe$aux$age.simple <- function(x) {
   if (x <= 51) return("adult")
   return("old")
 }
-fa$aux$age.discrete3 <- function(x) {
+fe$aux$age.discrete3 <- function(x) {
   return(as.integer(x / 3))
 }
-fa$aux$age.discrete5 <- function(x) {
+fe$aux$age.discrete5 <- function(x) {
   return(as.integer(x / 5))
 }
 
@@ -59,4 +59,5 @@ fe$forge_features <- function(df) {
   res$Deck <- mapply(fe$aux$deck, df$Cabin, df$Pclass)
   return(res)
 }
+
 

@@ -12,9 +12,12 @@ train.notna$Title <- train.ff$Title[cols.notna]
 train.notna$Age.disc <- train.ff$Age[cols.notna]
 
 
-plot(x = train.notna$Title, y = train.notna$Age)
-lattice::stripplot(Age ~ Title, data = train.notna)
-lattice::stripplot(Age.disc ~ SibSp | Title, data = train.notna)
+# plot(x = train.notna$Title, y = train.notna$Age)
+
+l1 <- lattice::stripplot(Age ~ Title, data = train.notna)
+l2 <- lattice::stripplot(Age.disc ~ SibSp | Title, data = train.notna)
+misc_funs$multiplot(l1, l2)
+
 # train.ff$Fare.factor <- as.factor(train.ff$Fare.discrete)
 # train.ff$Age.factor <- as.factor(train.ff$Age.discrete)
 
