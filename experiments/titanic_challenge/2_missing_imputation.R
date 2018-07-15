@@ -33,7 +33,7 @@ md.pattern(train.raw)
 # continuous age imputation
 
 cols.to_copy <- c("Age", "SibSp", "Parch", "Sex", "Fare")
-train.mi1.input <- aux_fun$df.make.from_df(train.raw, cols.to_copy)
+train.mi1.input <- misc_funs$df.make.from_df(train.raw, cols.to_copy)
 train.mi1.input$Title <- train.ff$Title
 
 

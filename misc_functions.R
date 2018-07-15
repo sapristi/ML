@@ -10,7 +10,7 @@ misc_funs$df.make.empty <- function(nrow, colnames=c(), stringsAsFactors=TRUE) {
 }
 
 misc_funs$df.make.from_df <- function(df, colnames, stringsAsFactors=TRUE) {
-    r.df <- df.make.empty(nrow(df), colnames, stringsAsFactors)
+    r.df <- misc_funs$df.make.empty(nrow(df), colnames, stringsAsFactors)
     for (colname in colnames) {r.df[,colname] <- df[,colname]}
     return(r.df)
 }
