@@ -18,13 +18,11 @@ fe$aux$title <- function(name) {
   return("Special")
 }
 
-
+fe$aux$fare.NA <- function(x) {if (x==0) {return(NA)} else {return(x)}}
+fe$aux$fare.sqrt <- function(x) {return(as.integer(sqrt(x)/3))}
+fe$aux$fare.log <- function(x) {return(as.integer(log(x)))}
 fe$aux$fare <- function(x) {if (x < 20) {return(0)}; if (x<40) {return(1)}; if (x<100) {return(2)}; return(3)}
 
-fe$aux$age.to_int <- function(x) {
-  if (is.na(x)) return(NA);
-  return(as.integer(x));
-}
 fe$aux$age.simple <- function(x) {
   if (is.na(x)) return(NA);
   if (x <= 15) return("youth")
@@ -50,14 +48,41 @@ fe$aux$deck <- function(cabin_str, pclass) {
 
 fe$forge_features <- function(df) {
   res <- misc_funs$df.make.empty(nrow(df))
-  res$Title <- sapply(df$Name, fe$aux$title)
-  res$Fare <- sapply(df$Fare, fe$aux$fare)
-  res$Age <- sapply(df$Age, fe$aux$age.to_int)
+  
+  res$Title <- as.factor(sapply(df$Name, fe$aux$title))
+  
+  res$Fare <- sapply(df$Fare, fe$aux$fare.NA)
+  res$Fare.sqrt <- sapply(res$Fare, fe$aux$fare.sqrt)
+  res$Fare.log <- sapply(res$Fare, fe$aux$fare.log)
+  
+  res$Age <- sapply(df$Age, as.integer)
   res$Age.simple <- sapply(df$Age, fe$aux$age.simple)
   res$Age.disc3 <- sapply(df$Age, fe$aux$age.discrete3)
   res$Age.disc5 <- sapply(df$Age, fe$aux$age.discrete5)
+  
   res$Deck <- mapply(fe$aux$deck, df$Cabin, df$Pclass)
   return(res)
 }
 
+fe$forge_features_add <- function(df) {
+  res <- data.frame(df)
+  
+  res$Title <- as.factor(sapply(df$Name, fe$aux$title))
+  
+  res$Fare <- sapply(df$Fare, fe$aux$fare.NA)
+  res$Fare.sqrt <- sapply(res$Fare, fe$aux$fare.sqrt)
+  res$Fare.log <- sapply(res$Fare, fe$aux$fare.log)
+  
+  res$Age <- sapply(df$Age, as.integer)
+  res$Age.simple <- as.factor(sapply(df$Age, fe$aux$age.simple))
+  res$Age.disc3 <- sapply(df$Age, fe$aux$age.discrete3)
+  res$Age.disc5 <- sapply(df$Age, fe$aux$age.discrete5)
+  
+  res$Deck <- mapply(fe$aux$deck, df$Cabin, df$Pclass)
+  return(res)
+}
+  
+  
+  
+  
 

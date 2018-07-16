@@ -34,28 +34,21 @@ train.notna$Age.discrete <- sapply(train.notna$Age, simp_age)
 
 ## simple fare
 plot(density(train.raw$Fare))
+
+train.raw$Fare <- sapply(train.raw$Fare, function(x) {if (x==0) {return(NA)} else {return(x)}})
+train.raw$Fare.log <- sapply(train.raw$Fare, function(x) {return(log(x))})
+
 simp_fare <- function(x) {if (x < 20) {return(0)}; if (x<40) {return(1)}; if (x<100) {return(2)}; return(3)}
 train.ff$Fare.discrete <- sapply(train.raw$Fare, simp_fare)
+
 table(train.ff$Fare.discrete, train.raw$Survived)
 table(train.ff$Fare.discrete, train.raw$Pclass)
 
 
 
-# function to apply to any dataframe
-
-forge_features <- function(df) {
-  res <- df.make.empty(nrow(df))
-  res$Title <- sapply(df$Name, make_title)
-  res$Fare <- sapply(df$Fare, simp_fare)
-  res$Age <- sapply(df$Age, simp_age)
-  res$Cabin <- sapply(df$Cabin, simp_cabin_deck)
-  return(res)
-}
+# write.csv(train.ff, file="datasets/titanic_na/train.ff.csv", row.names = FALSE)
 
 
-
-# save the forged features
-write.csv(train.ff, file="datasets/titanic_na/train.ff.csv", row.names = FALSE)
 
 
 
