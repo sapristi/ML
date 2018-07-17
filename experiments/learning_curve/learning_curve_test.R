@@ -10,7 +10,7 @@ train.raw <- read.csv("datasets/titanic/train.csv")
 test.raw <- read.csv("datasets/titanic/test.csv")
 
 
-features <- c("Pclass", "Sex", "Age", "SibSp", "Parch")
+features <- c("Pclass", "Sex", "Age", "SibSp", "Parch", "Fare")
 features.string = paste(features, collapse="+")
 
 train.selected <- train.raw[, c(features, "Survived")]
@@ -20,18 +20,12 @@ train.selected$SurvivedF <- as.factor(train.selected$Survived)
 test.selected$SurvivedF <- as.factor(test.selected$Survived)
 
 
-families <- c( binomial(link = "logit"),
-              gaussian(link = "identity"),
-              Gamma(link = "inverse"),
-              inverse.gaussian(link = "1/mu^2"),
-              poisson(link = "log"))
-
 
 
 g <- ggplot()
 
 #### aux functions
-library(purrr)
+# library(purrr)
 discretize <- function(data, threshold=0.5) {
   res <- lapply(data, function(e) {if (e < threshold) {return(0)} else {return(1)}});
   return(res);
@@ -40,6 +34,14 @@ discretize <- function(data, threshold=0.5) {
 #########
 ### logistic regression
 #########
+
+families <- c( binomial(link = "logit"),
+               gaussian(link = "identity"),
+               Gamma(link = "inverse"),
+               inverse.gaussian(link = "1/mu^2"),
+               poisson(link = "log"))
+
+  
 logreg.model_fun <- function(formula, train) {
   return(glm(as.formula(formula), data = train, family = binomial(link = "logit")))
 }

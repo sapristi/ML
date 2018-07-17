@@ -53,7 +53,9 @@ learning_curve$make_data_points <- function(train, test, target, features, model
 #' plots the learning curve of a model over selected data
 #' parameters : 
 #' @param train : training data.frame
-#' @param test :  test data.frame
+#' @param test :  model testing parameter. Can be :
+#'            - a data.frame on which to perform the tests
+#'            - a string parameter : 
 #' @param target : column name of target variable in train data.frame
 #' @param features : vector containing the names of the columns to use as features for prediction
 #' @param model_fun : function(formula, train) -> returns the model 
@@ -72,12 +74,30 @@ learning_curve$make_data_points <- function(train, test, target, features, model
 #' @return a ggplot object ready to plot
 #'   to_implement:
 #'      - randomize : randomizes training rows (in case training data is sorted)
+#'      - other testing parameters
 #'
 learning_curve$plot <- function(train, test, target, features, model_fun, 
-                             predict_fun = learning_curve$default_predict_fun, 
-                             steps = 10, limit=500, title="", previous_plot = NULL)
+                                predict_fun = learning_curve$default_predict_fun, 
+                                steps = 10, limit=500, title="", previous_plot = NULL)
 {
-  plot.data <- learning_curve$make_data_points(train, test, target, features, model_fun, 
+  
+  switch(class(test),
+         data.frame={print("test data.frame supplied"); 
+           train.df <- train;
+           test.df <- test},
+         numeric = {
+           if (0 < test & test < 1) {
+             sprintf("valid numeric test parameter supplied : %f", test);
+             n <- nrow(train);
+             split_limit <- as.integer(n * test);
+             sprintf("splitting data set at row %d", split_limit)
+             test.df <- train[0:(split_limit-1),];
+             train.df <- train[split_limit:(n-1),]
+           }
+         },
+         {error("can not interpret test parameter ")})
+  
+  plot.data <- learning_curve$make_data_points(train.df, test.df, target, features, model_fun, 
                                                predict_fun, steps, limit)
   
   if (is.null(previous_plot)) {
