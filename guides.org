@@ -1,0 +1,24 @@
+* learning curves 
+  https://stats.stackexchange.com/questions/220827/how-to-know-if-a-learning-curve-from-svm-model-suffers-from-bias-or-variance
+  
+  + low score + test/train curve close to each other -> bias problem
+  + 
+
+* Missing values
+
+  http://web.maths.unsw.edu.au/~dwarton/missingDataLab.html
+
+  Rubin (1976) differentiated between three types of missigness mechanisms:
+    + Missing completely at random (MCAR): when cases with missing values can be thought of as a random sample of all the cases; MCAR occurs rarely in practice.
+      -> on peut supprimer les observations
+      -> sinon MICE si on veut les garder
+
+    + Missing at random (MAR): when conditioned on all the data we have, any remaining missingness is completely random; that is, it does not depend on some missing variables. So missingness can be modelled using the observed data. Then, we can use specialised missing data analysis methods on the available data to correct for the effects of missingness.
+      -> use MICE
+      
+    + Missing not at random (MNAR): when data is neither MCAR nor MAR. This is difficult to handle because it will require strong assumptions about the patterns of missingness.
+      -> plus compliqué
+
+
+    Mice package :  Missing values imputation
+    VIM package : visualize missing values
