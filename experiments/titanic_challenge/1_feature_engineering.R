@@ -46,43 +46,49 @@ fe$aux$deck <- function(cabin_str, pclass) {
 }
 
 
-fe$forge_features <- function(df) {
-  res <- misc_funs$df.make.empty(nrow(df))
-  
-  res$Title <- as.factor(sapply(df$Name, fe$aux$title))
-  
-  res$Fare <- sapply(df$Fare, fe$aux$fare.NA)
-  res$Fare.sqrt <- sapply(res$Fare, fe$aux$fare.sqrt)
-  res$Fare.log <- sapply(res$Fare, fe$aux$fare.log)
-  
-  res$Age <- sapply(df$Age, as.integer)
-  res$Age.simple <- sapply(df$Age, fe$aux$age.simple)
-  res$Age.disc3 <- sapply(df$Age, fe$aux$age.discrete3)
-  res$Age.disc5 <- sapply(df$Age, fe$aux$age.discrete5)
-  
-  res$Deck <- mapply(fe$aux$deck, df$Cabin, df$Pclass)
-  return(res)
+fe$calculate_real_fare <- function(ticket, fare, ticket_vector) {
+  nb <- sum(ticket_vector == ticket)
+#  print(sprintf("%d tickets numbered %s ticket, in %d total tickets %s", nb, ticket, length(ticket_vector), class(ticket_vector)))
+  real_fare <- fare / nb
+  return(real_fare)
 }
 
-fe$forge_features_add <- function(df) {
-  res <- data.frame(df)
+
+fe$forge_features <- function(df, more_tickets = c()) {
   
-  res$Title <- as.factor(sapply(df$Name, fe$aux$title))
+  res <- misc_funs$df.make.empty(nrow(df))
   
-  res$Fare <- sapply(df$Fare, fe$aux$fare.NA)
-  res$Fare.sqrt <- sapply(res$Fare, fe$aux$fare.sqrt)
-  res$Fare.log <- sapply(res$Fare, fe$aux$fare.log)
+  res$PassengerId <- df$PassengerId
   
   res$Age <- sapply(df$Age, as.integer)
   res$Age.simple <- as.factor(sapply(df$Age, fe$aux$age.simple))
-  res$Age.disc3 <- sapply(df$Age, fe$aux$age.discrete3)
+#  res$Age.disc3 <- sapply(df$Age, fe$aux$age.discrete3)
   res$Age.disc5 <- sapply(df$Age, fe$aux$age.discrete5)
   
-  res$Deck <- mapply(fe$aux$deck, df$Cabin, df$Pclass)
+  res$Title <- as.factor(sapply(df$Name, fe$aux$title))
+  
+  res$Fare.old <- df$Fare
+  tickets = c(as.character(df$Ticket), as.character(more_tickets))
+  res$Fare <- mapply(fe$calculate_real_fare, df$Ticket, df$Fare, MoreArgs = list(ticket_vector = tickets))
+  
+  res$Fare <- sapply(res$Fare, fe$aux$fare.NA)
+  res$Fare.sqrt <- sapply(res$Fare, fe$aux$fare.sqrt)
+  res$Fare.log <- sapply(res$Fare, fe$aux$fare.log)
+  
+  #res$Deck <- mapply(fe$aux$deck, df$Cabin, df$Pclass)
+  
+  
   return(res)
 }
+
+fe$forge_features_add <- function(df,  more_tickets = c()) {
+  res <- data.frame(df)
+  ff <- fe$forge_features(df, more_tickets)
   
-  
-  
+  for (f in c("Age", "Age.simple", "Age.disc5", "Title", "Fare.old", "Fare", "Fare.sqrt", "Fare.log")) {
+    res[[f]] <- ff[[f]]
+  }
+  return(res)
+}
   
 
