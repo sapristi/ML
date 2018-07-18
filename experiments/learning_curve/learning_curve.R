@@ -33,7 +33,9 @@ learning_curve$make_data_points <- function(train, test, target, features, model
     res <- data.frame()
     c <- 1
 #    for (i in seq(10, min(nrow(train),limit), by=steps)) {
-    for (i in seq(from=10, to= min(nrow(train),limit), length.out=steps)) {
+    if (is.null(limit)) {limit <- nrow(train)}
+    
+    for (i in seq(from=20, to= min(nrow(train),limit), length.out=steps)) {
       train.sample <- train[sample(nrow(train), i), ]
       
       formula <- paste(target, paste(features, collapse = "+"), sep="~")
@@ -44,7 +46,7 @@ learning_curve$make_data_points <- function(train, test, target, features, model
       predicted.test <- predict_fun(model, test)
       res[c,1] <- i
       
-      if (class(train.sample[[target]]) == "factor") {
+      if (class(predicted.train) == "factor") {
         res[c,2] <- sum(predicted.train == train.sample[[target]])/length(train.sample[[target]])
         res[c,3] <- sum(predicted.test == test[[target]])/length(test[[target]])
       } else {
@@ -84,7 +86,7 @@ learning_curve$make_data_points <- function(train, test, target, features, model
 #'
 learning_curve$plot <- function(train, test, target, features, model_fun, 
                                 predict_fun = NULL, 
-                                steps = 10, limit=500, title="", previous_plot = NULL)
+                                steps = 10, limit=NULL, title="", previous_plot = NULL)
 {
   
   if (is.null(predict_fun)) {predict_fun <- learning_curve$default_predict_fun}
@@ -110,16 +112,26 @@ learning_curve$plot <- function(train, test, target, features, model_fun,
                                                predict_fun, steps, limit)
   
   if (is.null(previous_plot)) {
-    g <- ggplot() + labs(x = "training set size", y = "accuracy")
+    g <- ggplot()
   } else {g <- previous_plot}
   
   g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V2, col=title))
   g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V3, col=title))
+
   return(g)
 }
 
-  
-  
+learning_curve$make_decor <- function(g, title=NULL, ymin=NULL) {
+  g <- g + labs(x = "training set size", y = "accuracy")
+  g <- g + theme(legend.position="bottom", legend.box = "horizontal")
+  if (!is.null(title)) {
+    g <- g + ggtitle(title)  
+  }
+  if (!is.null(ymin)) {
+    g <- g + ylim(ymin, 1)
+  }
+  return(g)
+}
 # 
 # learning_curve.plot <- function(train, test, target, 
 #                                 features, model_fun, 
