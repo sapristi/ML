@@ -11,13 +11,14 @@ learning_curve$default_predict_fun <- function(model, data) {predict(model, data
 
 
 #' function to discretize output of logistic models
+#' but we don't really need it since accuracy takes likelihood as input
 learning_curve$discretize <- function(data, threshold=0.5) {
   res <- sapply(data, function(e) {if (e < threshold) {return(0)} else {return(1)}});
   return(res);
 }
 
 learning_curve$logreg_predict_fun <- function(model, data) 
-  {learning_curve$discretize(plogis(predict(model, data)))}
+  {plogis(predict(model, data))}
 
 
 #' auxilary function used by plot
@@ -41,10 +42,15 @@ learning_curve$make_data_points <- function(train, test, target, features, model
       
       predicted.train <- predict_fun(model, train.sample)
       predicted.test <- predict_fun(model, test)
-      
       res[c,1] <- i
-      res[c, 2] <- accuracy(predicted.train, train.sample[[target]])$prop.correct
-      res[c, 3] <- accuracy(predicted.test, test[[target]])$prop.correct
+      
+      if (class(train.sample[[target]]) == "factor") {
+        res[c,2] <- sum(predicted.train == train.sample[[target]])/length(train.sample[[target]])
+        res[c,3] <- sum(predicted.test == test[[target]])/length(test[[target]])
+      } else {
+        res[c, 2] <- accuracy(train.sample[[target]], predicted.train)$prop.correct
+        res[c, 3] <- accuracy(test[[target]], predicted.test)$prop.correct
+      }
       c <- c+1
     }
     return(res)
@@ -77,9 +83,12 @@ learning_curve$make_data_points <- function(train, test, target, features, model
 #'      - other testing parameters
 #'
 learning_curve$plot <- function(train, test, target, features, model_fun, 
-                                predict_fun = learning_curve$default_predict_fun, 
+                                predict_fun = NULL, 
                                 steps = 10, limit=500, title="", previous_plot = NULL)
 {
+  
+  if (is.null(predict_fun)) {predict_fun <- learning_curve$default_predict_fun}
+  
   
   switch(class(test),
          data.frame={print("test data.frame supplied"); 
