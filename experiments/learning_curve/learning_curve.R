@@ -121,6 +121,62 @@ learning_curve$plot <- function(train, test, target, features, model_fun,
   return(g)
 }
 
+learning_curve$plot_with_smoothing <- 
+        function(train, test, target, features, model_fun, 
+                 predict_fun = NULL, variations = 5,
+                 steps = 10, limit=NULL, title="", previous_plot = NULL)
+{
+  
+  if (is.null(predict_fun)) {predict_fun <- learning_curve$default_predict_fun}
+  
+  
+  switch(class(test),
+         numeric = {
+           if (0 < test & test < 1) {
+             sprintf("valid numeric test parameter supplied : %f", test);
+             n <- nrow(train);
+             
+             train_sets = list()
+             test_sets = list()
+             test_size <- as.integer(n * test)
+             all_rows = seq(from=1, to=nrow(train))
+             print(sprintf("%d rows, %d for training", nrow(train), test_size))
+             for (i in 1:variations) {
+               split_limit <- (i -1) * floor( (nrow(train) * (1-test)) / variations)
+               
+               print(sprintf("splitting data set at >= %d < %d", split_limit, split_limit + test_size))
+               test_rows <- (all_rows >= split_limit & all_rows < split_limit + test_size)
+               
+               train_sets[[i]] <- train[!test_rows,]
+               test_sets[[i]] <- train[test_rows,]
+             }
+             
+           } else {
+             error("invalid numeric test argument")
+           }
+         },
+         {error("can not interpret test parameter ")})
+          
+  plot.data <- data.frame()
+  
+  for (i in 1:variations) {
+    plot.data.temp <- learning_curve$make_data_points(train_sets[[i]], test_sets[[i]], target, features, model_fun, 
+                                               predict_fun, steps, limit)
+    plot.data <- rbind(plot.data, plot.data.temp)
+    }
+  
+  
+  if (is.null(previous_plot)) {
+    g <- ggplot()
+  } else {g <- previous_plot}
+  
+  g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V2, col=title))
+  g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V3, col=title))
+  
+  return(g)
+}
+
+
 learning_curve$make_decor <- function(g, title=NULL, ymin=NULL) {
   g <- g + labs(x = "training set size", y = "accuracy")
   g <- g + theme(legend.position="bottom", legend.box = "horizontal")
@@ -132,72 +188,67 @@ learning_curve$make_decor <- function(g, title=NULL, ymin=NULL) {
   }
   return(g)
 }
-# 
-# learning_curve.plot <- function(train, test, target, 
-#                                 features, model_fun, 
-#                                 predict_fun = default_predict_fun, 
-#                                 steps = 5, limit=500, title="")
-#   
-#   {
-#   res <- data.frame()
-#   c <- 1
-#   for (i in seq(10, min(nrow(train),limit), by=steps)) {
-#     train.sample <- train[sample(nrow(train), i), ]
-#     
-#     formula <- paste(target, paste(features, collapse = "+"), sep="~")
-#     
-#     model <- model_fun(formula, train.sample)
-#     
-#     predicted.train <- predict_fun(model, train.sample)
-#     predicted.test <- predict_fun(model, test)
-#     
-#     
-#     res[c,1] <- i
-#     res[c, 2] <- accuracy(predicted.train, train.sample[[target]])$prop.correct
-#     res[c, 3] <- accuracy(predicted.test, test[[target]])$prop.correct
-#     #res[c, 2] <- accuracy.bin(train.sample[[target_name]], predicted.train)
-#     #res[c, 3] <- accuracy.bin(test[[target_name]], predicted.test)
-#     c <- c+1
-#   }
-#   print(summary(model))
-#   
-#   g <- ggplot(data=res, aes(x=V1, y=V2, color="train"))
-#   g <- g + geom_line()
-#   g <- g + geom_line(aes(x=V1, y=V3, color = "test"))
-#   g <- g + labs(x = "training set size", y = "accuracy", colour="data set", title =title)
-#   return(g)
-# }
-# 
-# learning_curve.plot2 <- function(train, test, target, 
-#                                 features, model_fun, 
-#                                 predict_fun = default_predict_fun, 
-#                                 steps = 5, limit=500, title="", previous_plot=ggplot())
-# {
-#   res <- data.frame()
-#   c <- 1
-#   for (i in seq(10, min(nrow(train),limit), by=steps)) {
-#     train.sample <- train[sample(nrow(train), i), ]
-#     
-#     formula <- paste(target, paste(features, collapse = "+"), sep="~")
-#     
-#     model <- model_fun(formula, train.sample)
-#     
-#     predicted.train <- predict_fun(model, train.sample)
-#     predicted.test <- predict_fun(model, test)
-#     
-#     
-#     res[c,1] <- i
-#     res[c, 2] <- accuracy(predicted.train, train.sample[[target]])$prop.correct
-#     res[c, 3] <- accuracy(predicted.test, test[[target]])$prop.correct
-#     #res[c, 2] <- accuracy.bin(train.sample[[target_name]], predicted.train)
-#     #res[c, 3] <- accuracy.bin(test[[target_name]], predicted.test)
-#     c <- c+1
-#   }
-#   
-#   print(summary(model))
-#   g <- previous_plot
-#   g <- g + geom_line(data=res, aes_(x=~V1, y=~V2, col=title))#, color=title))
-#   g <- g + geom_line(data=res, aes_(x=~V1, y=~V3, col=title)) #, color=title))
-#   g <- g + labs(x = "training set size", y = "accuracy", colour="data set", title =title)
-#   return(g)
-# }
+
+
+learning_curve$plot_with_smoothing_old <- 
+  function(train, test, target, features, model_fun, 
+           predict_fun = NULL, variations = 5,
+           steps = 10, limit=NULL, title="", previous_plot = NULL)
+  {
+    
+    if (is.null(predict_fun)) {predict_fun <- learning_curve$default_predict_fun}
+    
+    
+    switch(class(test),
+           numeric = {
+             if (0 < test & test < 1) {
+               sprintf("valid numeric test parameter supplied : %f", test);
+               n <- nrow(train);
+               
+               train_sets = list()
+               test_sets = list()
+               test_size <- as.integer(n * test)
+               all_rows = seq(from=1, to=nrow(train))
+               print(sprintf("%d rows, %d for training", nrow(train), test_size))
+               for (i in 1:variations) {
+                 split_limit <- (i -1) * floor( (nrow(train) * (1-test)) / variations)
+                 
+                 print(sprintf("splitting data set at >= %d < %d", split_limit, split_limit + test_size))
+                 test_rows <- (all_rows >= split_limit & all_rows < split_limit + test_size)
+                 
+                 train_sets[[i]] <- train[!test_rows,]
+                 test_sets[[i]] <- train[test_rows,]
+               }
+               
+             } else {
+               error("invalid numeric test argument")
+             }
+           },
+           {error("can not interpret test parameter ")})
+    plot.train <- misc_funs$df.make.empty(nrow = steps)
+    plot.test <- misc_funs$df.make.empty(nrow = steps)
+    X_vec <- c()
+    
+    for (i in 1:variations) {
+      plot.data <- learning_curve$make_data_points(train_sets[[i]], test_sets[[i]], target, features, model_fun, 
+                                                   predict_fun, steps, limit)
+      plot.train[[i]] <- plot.data$V2
+      plot.test[[i]]  <- plot.data$V3
+      X_vec <- plot.data$V1
+    }
+    
+    plot.train$mean <- rowMeans(plot.train)
+    plot.test$mean <- rowMeans(plot.test)
+    plot.train$X <- X_vec
+    plot.test$X <- X_vec
+    
+    if (is.null(previous_plot)) {
+      g <- ggplot()
+    } else {g <- previous_plot}
+    
+    g <- g + geom_line(data=plot.train, aes_(x=~X, y=~mean, col=title))
+    g <- g + geom_line(data=plot.test, aes_(x=~X, y=~mean, col=title))
+    
+    return(g)
+  }
+
