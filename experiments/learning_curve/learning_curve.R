@@ -84,7 +84,7 @@ learning_curve$make_data_points <- function(train, test, target, features, model
 #'      - randomize : randomizes training rows (in case training data is sorted)
 #'      - other testing parameters
 #'
-learning_curve$plot <- function(train, test, target, features, model_fun, 
+learning_curve$plot.simple <- function(train, test, target, features, model_fun, 
                                 predict_fun = NULL, 
                                 steps = 10, limit=NULL, title="", previous_plot = NULL)
 {
@@ -121,34 +121,43 @@ learning_curve$plot <- function(train, test, target, features, model_fun,
   return(g)
 }
 
-learning_curve$plot_with_smoothing <- 
-        function(train, test, target, features, model_fun, 
-                 predict_fun = NULL, variations = 5,
-                 steps = 10, limit=NULL, title="", previous_plot = NULL)
+learning_curve$plot.advanced <- 
+        function(train, test, target, features, model_fun, predict_fun = NULL, 
+                 steps = 10, limit=NULL, variations = 5, smoothing = FALSE,
+                 randomize= TRUE, random.seed = NULL,
+                 title="", previous_plot = NULL)
 {
   
   if (is.null(predict_fun)) {predict_fun <- learning_curve$default_predict_fun}
   
-  
+  ###      test and train row selection for the different variations
+  ###########
   switch(class(test),
+         data.frame={print("test data.frame supplied"); 
+           error("broken feature; do not use; call support for help; or fix it yourself")
+           train.df <- train;
+           test.df <- test},
          numeric = {
            if (0 < test & test < 1) {
              sprintf("valid numeric test parameter supplied : %f", test);
              n <- nrow(train);
              
-             train_sets = list()
-             test_sets = list()
+             train_rows = list()
+             test_rows = list()
              test_size <- as.integer(n * test)
              all_rows = seq(from=1, to=nrow(train))
-             print(sprintf("%d rows, %d for training", nrow(train), test_size))
+             #print(sprintf("%d rows, %d for training", nrow(train), test_size))
              for (i in 1:variations) {
+               if (randomize) { rows <- all_rows[sample(nrow(train))] }
+               else { rows <- all_rows}
+               
                split_limit <- (i -1) * floor( (nrow(train) * (1-test)) / variations)
                
-               print(sprintf("splitting data set at >= %d < %d", split_limit, split_limit + test_size))
-               test_rows <- (all_rows >= split_limit & all_rows < split_limit + test_size)
+               # print(sprintf("splitting data set at >= %d < %d", split_limit, split_limit + test_size))
+               test_rows_ind <- (all_rows >= split_limit & all_rows < split_limit + test_size)
                
-               train_sets[[i]] <- train[!test_rows,]
-               test_sets[[i]] <- train[test_rows,]
+               train_rows[[i]] <- rows[!test_rows,]
+               test_rows[[i]] <- rows[test_rows,]
              }
              
            } else {
@@ -157,11 +166,24 @@ learning_curve$plot_with_smoothing <-
          },
          {error("can not interpret test parameter ")})
           
+  ###        smoothing 
+  ###################"
+          
+  switch(class(smoothing),
+         logical = {
+           if (smoothing) { smoothing_factor <- if (variations == 1) {0.75} else {0.1}}
+         },
+         numeric = {
+           smoothing_factor <- smoothing; smoothing <- TRUE
+         }) 
+          
+  ### plots construction
+  #############
   plot.data <- data.frame()
   
   for (i in 1:variations) {
-    plot.data.temp <- learning_curve$make_data_points(train_sets[[i]], test_sets[[i]], target, features, model_fun, 
-                                               predict_fun, steps, limit)
+    plot.data.temp <- learning_curve$make_data_points(train[train_rows[[i]],], test[test_rows[[i]],], target, features, 
+                                                      model_fun, predict_fun, steps, limit)
     plot.data <- rbind(plot.data, plot.data.temp)
     }
   
@@ -169,10 +191,13 @@ learning_curve$plot_with_smoothing <-
   if (is.null(previous_plot)) {
     g <- ggplot()
   } else {g <- previous_plot}
-  
-  g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V2, col=title))
-  g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V3, col=title))
-  
+  if (smoothing | variations > 1) {
+    g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V2, col=title), span=smoothing_span, method="auto", formula = y~x)
+    g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V3, col=title), span=smoothing_span, method="auto", formula = y~x)
+  } else {
+    g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V2, col=title))
+    g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V3, col=title))
+  }
   return(g)
 }
 
@@ -188,67 +213,4 @@ learning_curve$make_decor <- function(g, title=NULL, ymin=NULL) {
   }
   return(g)
 }
-
-
-learning_curve$plot_with_smoothing_old <- 
-  function(train, test, target, features, model_fun, 
-           predict_fun = NULL, variations = 5,
-           steps = 10, limit=NULL, title="", previous_plot = NULL)
-  {
-    
-    if (is.null(predict_fun)) {predict_fun <- learning_curve$default_predict_fun}
-    
-    
-    switch(class(test),
-           numeric = {
-             if (0 < test & test < 1) {
-               sprintf("valid numeric test parameter supplied : %f", test);
-               n <- nrow(train);
-               
-               train_sets = list()
-               test_sets = list()
-               test_size <- as.integer(n * test)
-               all_rows = seq(from=1, to=nrow(train))
-               print(sprintf("%d rows, %d for training", nrow(train), test_size))
-               for (i in 1:variations) {
-                 split_limit <- (i -1) * floor( (nrow(train) * (1-test)) / variations)
-                 
-                 print(sprintf("splitting data set at >= %d < %d", split_limit, split_limit + test_size))
-                 test_rows <- (all_rows >= split_limit & all_rows < split_limit + test_size)
-                 
-                 train_sets[[i]] <- train[!test_rows,]
-                 test_sets[[i]] <- train[test_rows,]
-               }
-               
-             } else {
-               error("invalid numeric test argument")
-             }
-           },
-           {error("can not interpret test parameter ")})
-    plot.train <- misc_funs$df.make.empty(nrow = steps)
-    plot.test <- misc_funs$df.make.empty(nrow = steps)
-    X_vec <- c()
-    
-    for (i in 1:variations) {
-      plot.data <- learning_curve$make_data_points(train_sets[[i]], test_sets[[i]], target, features, model_fun, 
-                                                   predict_fun, steps, limit)
-      plot.train[[i]] <- plot.data$V2
-      plot.test[[i]]  <- plot.data$V3
-      X_vec <- plot.data$V1
-    }
-    
-    plot.train$mean <- rowMeans(plot.train)
-    plot.test$mean <- rowMeans(plot.test)
-    plot.train$X <- X_vec
-    plot.test$X <- X_vec
-    
-    if (is.null(previous_plot)) {
-      g <- ggplot()
-    } else {g <- previous_plot}
-    
-    g <- g + geom_line(data=plot.train, aes_(x=~X, y=~mean, col=title))
-    g <- g + geom_line(data=plot.test, aes_(x=~X, y=~mean, col=title))
-    
-    return(g)
-  }
 
