@@ -1,7 +1,7 @@
 
 library(ggplot2)
 library(SDMTools)
-
+library(Hmisc)
 
 
 learning_curve <- list()
@@ -115,15 +115,15 @@ learning_curve$plot.simple <- function(train, test, target, features, model_fun,
     g <- ggplot()
   } else {g <- previous_plot}
   
-  g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V2, col=title))
-  g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V3, col=title))
+  g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V2, col=title, fill=title))
+  g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V3, col=title, fill=title))
 
   return(g)
 }
 
 learning_curve$plot.advanced <- 
         function(train, test, target, features, model_fun, predict_fun = NULL, 
-                 steps = 10, limit=NULL, variations = 5, smoothing = FALSE,
+                 steps = 10, limit=NULL, variations = 5, smoothing = TRUE,
                  randomize= TRUE, random.seed = NULL,
                  title="", previous_plot = NULL)
 {
@@ -156,8 +156,8 @@ learning_curve$plot.advanced <-
                # print(sprintf("splitting data set at >= %d < %d", split_limit, split_limit + test_size))
                test_rows_ind <- (all_rows >= split_limit & all_rows < split_limit + test_size)
                
-               train_rows[[i]] <- rows[!test_rows,]
-               test_rows[[i]] <- rows[test_rows,]
+               train_rows[[i]] <- rows[!test_rows_ind]
+               test_rows[[i]] <- rows[test_rows_ind]
              }
              
            } else {
@@ -171,10 +171,10 @@ learning_curve$plot.advanced <-
           
   switch(class(smoothing),
          logical = {
-           if (smoothing) { smoothing_factor <- if (variations == 1) {0.75} else {0.1}}
+           smoothing_span <- if (variations == 1) {0.75} else {0.2}
          },
          numeric = {
-           smoothing_factor <- smoothing; smoothing <- TRUE
+           smoothing_span <- smoothing; smoothing <- TRUE
          }) 
           
   ### plots construction
@@ -182,18 +182,38 @@ learning_curve$plot.advanced <-
   plot.data <- data.frame()
   
   for (i in 1:variations) {
-    plot.data.temp <- learning_curve$make_data_points(train[train_rows[[i]],], test[test_rows[[i]],], target, features, 
+    plot.data.temp <- learning_curve$make_data_points(train[train_rows[[i]],], train[test_rows[[i]],], target, features, 
                                                       model_fun, predict_fun, steps, limit)
     plot.data <- rbind(plot.data, plot.data.temp)
     }
-  
+  print(max(plot.data$V2))
+  print(max(plot.data$V3))
   
   if (is.null(previous_plot)) {
     g <- ggplot()
   } else {g <- previous_plot}
   if (smoothing | variations > 1) {
-    g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V2, col=title), span=smoothing_span, method="auto", formula = y~x)
-    g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V3, col=title), span=smoothing_span, method="auto", formula = y~x)
+
+  g <- g + 
+    stat_summary_bin(data=plot.data, aes_(x=~V1, y=~V2, fill=title), 
+                     geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=0.95), alpha=0.5)+
+    scale_fill_hue(c=40,l=80) +
+    stat_summary_bin(data=plot.data, aes_(x=~V1, y=~V2), geom="line", fun.y=mean, linetype="dashed")+
+    stat_summary_bin(data=plot.data, aes_(x=~V1, y=~V2, color=title), geom="point", fun.y=mean)
+        
+  
+  g <- g + 
+    stat_summary_bin(data=plot.data, aes_(x=~V1, y=~V3, fill=title), 
+                     geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=0.95), alpha=0.5)+
+    stat_summary_bin(data=plot.data, aes_(x=~V1, y=~V3), geom="line", fun.y=mean, linetype="dashed")+
+    stat_summary_bin(data=plot.data, aes_(x=~V1, y=~V3, color=title), geom="point", fun.y=mean)
+  
+    # g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V2, col=title, fill=title), 
+    #                      span=smoothing_span, method="gam", formula = y~x)
+    # g <- g + stat_smooth(data=plot.data, aes_(x=~V1, y=~V3, col=title, fill=title), 
+    #                      span=smoothing_span, method="gam", formula = y~x)
+    # 
+    
   } else {
     g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V2, col=title))
     g <- g + geom_line(data=plot.data, aes_(x=~V1, y=~V3, col=title))
