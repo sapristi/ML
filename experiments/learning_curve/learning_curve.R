@@ -147,14 +147,14 @@ learning_curve$plot.advanced <-
              test.df <- test},
            numeric = {
              if (0 < test & test < 1) {
-               print(sprintf("%f of the train data will be used as test set for each variation ", test*100))
+               #print(sprintf("%f of the train data will be used as test set for each variation ", test*100))
                n <- nrow(train);
                
                train_rows = list()
                test_rows = list()
                test_size <- as.integer(n * test)
                all_rows = seq(from=1, to=nrow(train))
-               #print(sprintf("%d rows, %d for training", nrow(train), test_size))
+               print(sprintf("%d rows, %d for training", nrow(train), test_size))
                for (i in 1:variations) {
                  if (shuffle) { rows <- all_rows[sample(nrow(train))] }
                  else { rows <- all_rows}
