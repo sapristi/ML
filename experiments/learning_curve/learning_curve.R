@@ -54,6 +54,8 @@ learning_curve$make_data_points <- function(train, test, target, features,
 #      print(sprintf("pred.test %d, test.target, %d", length(predicted.test), length(test[[target]])))
       res[c,3] <- sum(predicted.test == test[names(predicted.test), c(target)])/length(test[[target]])
       
+      #print(sprintf("%d NA in train prediction, %d NA in test prediction", sum(is.na(res[c,2])), sum(is.na(res[c,3]))))
+      
        #print(sprintf("pred : %f %f", res[c,2], res[c,3]))
     } else {
       res[c, 2] <- accuracy(train.sample[[target]], predicted.train)$prop.correct

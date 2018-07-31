@@ -18,7 +18,7 @@ fe$aux$title <- function(name) {
   return("Special")
 }
 
-fe$aux$fare.NA <- function(x) {if (x==0) {return(NA)} else {return(x)}}
+fe$aux$fare.NA <- function(x) {if (is.na(x) | x==0) {return(NA)} else {return(x)}}
 fe$aux$fare.sqrt <- function(x) {return(as.integer(sqrt(x)/3))}
 fe$aux$fare.log <- function(x) {return(as.integer(log(x)))}
 fe$aux$fare <- function(x) {if (x < 20) {return(0)}; if (x<40) {return(1)}; if (x<100) {return(2)}; return(3)}
